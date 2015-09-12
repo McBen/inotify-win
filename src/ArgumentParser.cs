@@ -91,6 +91,10 @@ namespace De.Thekid.INotify
             {
                 result.Exclude = new Regex(option.Split(new Char[]{'='}, 2)[1], RegexOptions.IgnoreCase);
             }
+            else if (option.StartsWith("@"))
+            {
+                result.PathsIgnore.Add(System.IO.Path.GetFullPath(option.Split(new Char[] { '@' }, 2)[1]));
+            }
             else if (Directory.Exists(option))
             {
                 result.Paths.Add(System.IO.Path.GetFullPath(option));

@@ -56,8 +56,9 @@ namespace De.Thekid.INotify
                 Output(Console.Out, _args.Format, w, Change.MOVED_TO, e.Name);
             });
         }
-        
-        private void HandleNotification(FileSystemWatcher sender, FileSystemEventArgs e, Action outputAction)
+
+
+    private void HandleNotification(FileSystemWatcher sender, FileSystemEventArgs e, Action outputAction)
         {
             // Lock so we don't output more than one change if we were only supposed to watch for one.
             // And to serialize access to the console
@@ -68,12 +69,12 @@ namespace De.Thekid.INotify
                 {
                     return;
                 }
-        
-                if (null != _args.Exclude && _args.Exclude.IsMatch(e.FullPath))
+
+                if (IsExcludedFile(getFullPath(e)))
                 {
                     return;
                 }
-        
+
                 outputAction();
         
                 // If only looking for one change, signal to stop
@@ -85,8 +86,40 @@ namespace De.Thekid.INotify
             }
         }
 
-        /// Output method
-        protected void Output(TextWriter writer, string[] tokens, FileSystemWatcher source, Change type, string name)
+        private string getFullPath(FileSystemEventArgs e)
+        {
+            string path = e.FullPath;
+
+            try
+            {
+                if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
+                {
+                    path += '\\';
+                }
+            }
+            catch (System.IO.FileNotFoundException) { };
+
+            return path;
+        }
+
+        private bool IsExcludedFile(string fullpath)
+        {
+            if (null != _args.Exclude && _args.Exclude.IsMatch(fullpath))
+            {
+                return true;
+            }
+
+            foreach (var path in _args.PathsIgnore)
+            {
+                if (fullpath.StartsWith(path))
+                    return true;
+            }
+
+            return false;
+        }
+
+    /// Output method
+    protected void Output(TextWriter writer, string[] tokens, FileSystemWatcher source, Change type, string name)
         {
             foreach (var token in tokens)
             {
